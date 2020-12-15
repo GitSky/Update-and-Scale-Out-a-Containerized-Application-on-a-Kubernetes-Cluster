@@ -1,0 +1,23 @@
+PCA Prep - Update and Scale Out a Containerized Application on a Kubernetes Cluster
+
+Topics tested
+- Update a docker application and push a new version to a container repository.
+- Deploy the updated application version to a Kubernetes cluster.
+- Scale out the application so that it is running 2 replicas.
+
+Proposed Solution:
+gcloud auth list
+gcloud config list project
+export PROJECT_ID=[PROJECT_ID]
+mkdir echo-web
+gsutil cp -r gs://${PROJECT_ID}/echo-web-v2.tar.gz .
+tar -xvzf echo-web-v2.tar.gz
+rm echo-web-v2.tar.gz
+docker build -t echo-app:v2 .
+docker tag echo-app:v2 gcr.io/${PROJECT_ID}/echo-app:v2
+docker push gcr.io/${PROJECT_ID}/echo-app:v2
+gcloud container clusters get-credentials echo-cluster --zone=us-central1-a
+kubectl create deployment echo-web --image=gcr.io/qwiklabs-resources/echo-app:v2
+kubectl scale deployment echo-web --replicas=2
+kubectl expose deployment echo-web --type=LoadBalancer --port 80 --target-port 8000
+kubectl get svc
